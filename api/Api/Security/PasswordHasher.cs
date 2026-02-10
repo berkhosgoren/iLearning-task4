@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 
 namespace Api.Security
 {
@@ -6,17 +7,15 @@ namespace Api.Security
     {
         public static string Hash(string password)
         {
-            var salt = RandomNumberGenerator.GetBytes(16);
+           using var sha = SHA256.Create();
+           var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToHexString(bytes).ToLowerInvariant();
+        }
 
-            var hash = Rfc2898DeriveBytes.Pbkdf2(
-                password,
-                salt,
-                iterations: 100_000,
-                hashAlgorithm: HashAlgorithmName.SHA256,
-                outputLength: 32
-                );
-
-            return $"{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
+    public static bool Verify(string password, string hash)
+        {
+            var computed = Hash(password);
+            return computed == hash;
         }
     }
 }

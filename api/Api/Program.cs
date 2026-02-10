@@ -4,6 +4,9 @@ using Api.DTOs;
 using Api.Models;
 using Api.Security;
 using Api.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +23,27 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
-var app = builder.Build(); 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
+{
+    var key = builder.Configuration["Jwt:Key"] ?? "";
+    o.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+    };
+});
+
+builder.Services.AddAuthorization();
+builder.Services.AddSingleton<JwtTokenService>();
+
+var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -113,6 +136,41 @@ app.MapGet("/auth/confirm", async (string? token, AppDbContext db) =>
     await db.SaveChangesAsync();
 
     return Results.Ok("Email confirmed");
+});
+
+app.MapPost("/auth/login", async (LoginRequest req, AppDbContext db, JwtTokenService jwt) =>
+{
+    var email = (req.Email ?? "").Trim().ToLowerInvariant();
+    var password = req.Password ?? "";
+
+    if (email.Length < 5 || !email.Contains('@'))
+        return Results.BadRequest(new { message = "Invalid email." });
+
+    if (password.Length == 0)
+        return Results.BadRequest(new { message = "Password is required." });
+
+    var user = await db.Users.SingleOrDefaultAsync(u => u.Email == email);
+    if (user is null)
+        return Results.Json(new { message = "Invalid credentials." }, statusCode: 401);
+
+    if (user.Status == UserStatus.Blocked)
+        return Results.Json(new { message = "User is blocked." }, statusCode: 401);
+
+    if (user.Status == UserStatus.Unverified)
+        return Results.Json(new { message = "Confirm your email." }, statusCode: 401);
+
+    if (!PasswordHasher.Verify(password, user.PasswordHash))
+        return Results.BadRequest(new { message = "Invalid credentials." });
+
+    user.LastLoginAtUtc = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new
+    {
+        message = "Login successful",
+        user = new { user.Id, user.Name, user.Email, status = user.Status.ToString() }
+    });
+
 });
 
 static bool IsUniqueEmailViolation(DbUpdateException ex)
