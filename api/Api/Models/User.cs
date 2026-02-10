@@ -6,17 +6,19 @@ namespace Api.Models
     {
         public Guid Id { get; set; }
 
-        public string Name { get; set; } = null;
+        public string Name { get; set; } = "";
 
-        public string Email { get; set; } = null;
+        public string Email { get; set; } = "";
 
-        public string PasswordHash { get; set; } = null;
+        public string PasswordHash { get; set; } = "";
 
-        public bool IsEmailConfirmed { get; set; }
+        public UserStatus Status { get; set; } = UserStatus.Unverified;
 
-        public UserStatus Status { get; set; }
+        public string EmailConfirmationToken { get; set; } = "";
 
-        public DateTime CreatedAtUtc { get; set; }
+        public DateTime? EmailConfirmedAtUtc { get; set; }
+
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
         public DateTime? LastLoginAtUtc { get; set; }
 

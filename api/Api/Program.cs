@@ -48,8 +48,9 @@ app.MapPost("/auth/register", async (RegisterRequest req, AppDbContext db) =>
         Name = name,
         Email = email,
         PasswordHash = PasswordHasher.Hash(password),
-        IsEmailConfirmed = false,
         Status = UserStatus.Unverified,
+        EmailConfirmationToken = Guid.NewGuid().ToString("N"),
+        EmailConfirmedAtUtc = null,
         CreatedAtUtc = DateTime.UtcNow,
         LastLoginAtUtc = null
     };
