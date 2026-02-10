@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Api.DTOs;
 using Api.Models;
 using Api.Security;
+using Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(cs);
 });
 
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+
 var app = builder.Build(); 
 
 if (app.Environment.IsDevelopment())
@@ -27,7 +31,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "API is running");
 
-app.MapPost("/auth/register", async (RegisterRequest req, AppDbContext db) =>
+app.MapPost("/auth/register", async (RegisterRequest req, AppDbContext db, IEmailSender emailSender) =>
 {
     var name = (req.Name ?? "").Trim();
     var email = (req.Email ?? "").Trim().ToLowerInvariant();
@@ -66,7 +70,49 @@ app.MapPost("/auth/register", async (RegisterRequest req, AppDbContext db) =>
         return Results.Conflict(new { message = "Email is already registered." });
     }
 
+    var baseUrl = builder.Configuration["App:PublicBaseUrl"] ?? "http://localhost:5242";
+
+    var confirmLink = $"{baseUrl}/auth/confirm?token={user.EmailConfirmationToken}";
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            await emailSender.SendAsync(user.Email,
+                "Confirm your email", $"Hello {user.Name}, \n\nPlease Confirm Your Email\n{confirmLink}");
+        }
+        
+        catch
+        {
+
+        }
+    });
+
     return Results.Ok(new { message = "Registered. Please confirm your email." });
+});
+
+app.MapGet("/auth/confirm", async (string? token, AppDbContext db) =>
+{
+    if (string.IsNullOrWhiteSpace(token))
+        return Results.BadRequest("Invalid token");
+
+    var user = await db.Users.SingleOrDefaultAsync(u => u.EmailConfirmationToken == token);
+    if (user is null)
+        return Results.BadRequest("Invalid token");
+
+    if (user.Status == UserStatus.Blocked)
+        return Results.BadRequest("User is blocked");
+
+    if (user.Status == UserStatus.Active)
+        return Results.Ok("Already confirmed");
+
+    user.Status = UserStatus.Active;
+    user.EmailConfirmedAtUtc = DateTime.UtcNow;
+    user.EmailConfirmationToken = "";
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok("Email confirmed");
 });
 
 static bool IsUniqueEmailViolation(DbUpdateException ex)
