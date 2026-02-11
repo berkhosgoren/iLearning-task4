@@ -17,13 +17,17 @@ namespace Api.Security
             if (!http.User.Identity?.IsAuthenticated ?? true)
                 return await next(context);
 
-            var userId = http.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = http.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? http.User.FindFirstValue("sub");
+            
             if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            if (!Guid.TryParse(userId, out var uid))
                 return Results.Unauthorized();
 
             var db = http.RequestServices.GetRequiredService<AppDbContext>();
 
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == uid);
 
             if (user is null)
                 return Results.Unauthorized();

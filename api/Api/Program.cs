@@ -68,11 +68,6 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.Use(async (ctx, next) =>
-{
-    await next();
-});
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -183,9 +178,6 @@ app.MapPost("/auth/login", async (LoginRequest req, AppDbContext db, JwtTokenSer
     if (user.Status == UserStatus.Blocked)
         return Results.Json(new { message = "User is blocked." }, statusCode: 401);
 
-    if (user.Status == UserStatus.Unverified)
-        return Results.Json(new { message = "Confirm your email." }, statusCode: 401);
-
     if (!PasswordHasher.Verify(password, user.PasswordHash))
         return Results.BadRequest(new { message = "Invalid credentials." });
 
@@ -203,12 +195,15 @@ app.MapPost("/auth/login", async (LoginRequest req, AppDbContext db, JwtTokenSer
 
 });
 
-var secured = app.MapGroup("/")
+var users = app.MapGroup("/users")
     .RequireAuthorization().AddEndpointFilter<UserAccessFilter>();
 
-secured.MapGet("/users", async (AppDbContext db) =>
+users.MapGet("/", async (AppDbContext db) =>
 {
-    var users = await db.Users.OrderByDescending(u => u.CreatedAtUtc).Select(u => new
+    var list = await db.Users
+    .OrderByDescending(u => u.LastLoginAtUtc ?? DateTime.MinValue)
+    .ThenByDescending(u => u.CreatedAtUtc)
+    .Select(u => new
     {
         u.Id,
         u.Name,
@@ -219,7 +214,7 @@ secured.MapGet("/users", async (AppDbContext db) =>
     })
     .ToListAsync();
 
-    return Results.Ok(users);
+    return Results.Ok(list);
 });
 
 static bool IsUniqueEmailViolation(DbUpdateException ex)
