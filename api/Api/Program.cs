@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -74,9 +75,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/", () => "API is running");
+app.MapGet("/", (IHostEnvironment env) =>
+{
+    if (env.IsDevelopment())
+        return Results.Redirect("/swagger");
 
-app.MapPost("/auth/register", async (RegisterRequest req, AppDbContext db, IEmailSender emailSender) =>
+    return Results.Ok("API is running");
+});
+
+var auth = app.MapGroup("/auth");
+
+auth.MapPost("/register", async (RegisterRequest req, AppDbContext db, IEmailSender emailSender) =>
 {
     var name = (req.Name ?? "").Trim();
     var email = (req.Email ?? "").Trim().ToLowerInvariant();
@@ -136,7 +145,7 @@ app.MapPost("/auth/register", async (RegisterRequest req, AppDbContext db, IEmai
     return Results.Ok(new { message = "Registered. Please confirm your email." });
 });
 
-app.MapGet("/auth/confirm", async (string? token, AppDbContext db) =>
+auth.MapGet("/confirm", async (string? token, AppDbContext db) =>
 {
     if (string.IsNullOrWhiteSpace(token))
         return Results.BadRequest("Invalid token");
@@ -160,7 +169,7 @@ app.MapGet("/auth/confirm", async (string? token, AppDbContext db) =>
     return Results.Ok("Email confirmed");
 });
 
-app.MapPost("/auth/login", async (LoginRequest req, AppDbContext db, JwtTokenService jwt) =>
+auth.MapPost("/login", async (LoginRequest req, AppDbContext db, JwtTokenService jwt) =>
 {
     var email = (req.Email ?? "").Trim().ToLowerInvariant();
     var password = req.Password ?? "";
@@ -193,6 +202,18 @@ app.MapPost("/auth/login", async (LoginRequest req, AppDbContext db, JwtTokenSer
         user = new { user.Id, user.Name, user.Email, status = user.Status.ToString() }
     });
 
+});
+
+var authProtected = app.MapGroup("/auth")
+    .RequireAuthorization().AddEndpointFilter<UserAccessFilter>();
+
+authProtected.MapGet("/me", (HttpContext http) =>
+{
+    var id = http.User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) ?? http.User.FindFirstValue("sub");
+
+    var email = http.User.FindFirstValue("email");
+
+    return Results.Ok(new { id, email });
 });
 
 var users = app.MapGroup("/users")
