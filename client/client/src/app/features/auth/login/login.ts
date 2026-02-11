@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -13,6 +14,7 @@ import { CommonModule } from '@angular/common';
 export class Login {
 
   private auth = inject(AuthService);
+  private router = inject(Router);
 
   email = '';
   password = '';
@@ -27,6 +29,7 @@ export class Login {
       next:(res:any)=>{
         this.auth.setToken(res.token);
         this.message = 'Login success';
+        this.router.navigate(['/users']);
       },
       error:(err)=>{
         this.message = err.error?.message ?? 'Error';
