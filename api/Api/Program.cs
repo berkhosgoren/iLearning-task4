@@ -217,6 +217,61 @@ users.MapGet("/", async (AppDbContext db) =>
     return Results.Ok(list);
 });
 
+users.MapPost("/block", async (IdsRequest req, AppDbContext db) =>
+{
+    if (req.Ids.Length == 0)
+        return Results.BadRequest(new { message = "No users selected." });
+
+    var list = await db.Users.Where(u => req.Ids.Contains(u.Id)).ToListAsync();
+
+    foreach (var u in list)
+        u.Status = UserStatus.Blocked;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(new { message = "Users blocked. " });
+});
+
+users.MapPost("/unblock", async (IdsRequest req, AppDbContext db) =>
+{
+    if (req.Ids.Length == 0)
+        return Results.BadRequest(new { message = "No users selected." });
+
+    var list = await db.Users.Where(u => req.Ids.Contains(u.Id)).ToListAsync();
+
+    foreach (var u in list)
+        if (u.Status == UserStatus.Blocked)
+            u.Status = UserStatus.Active;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(new { message = "Users unblocked. " });
+});
+
+users.MapPost("/delete", async (IdsRequest req, AppDbContext db) =>
+{
+    if (req.Ids.Length == 0)
+        return Results.BadRequest(new { message = "No users selected." });
+
+    var list = await db.Users.Where(u => req.Ids.Contains(u.Id)).ToListAsync();
+
+    db.Users.RemoveRange(list);
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new { message = "Users deleted. " });
+});
+
+users.MapPost("/delete-unverified", async (IdsRequest req, AppDbContext db) =>
+{
+    var list = await db.Users.Where(u => u.Status == UserStatus.Unverified).ToListAsync();
+
+    if (list.Count == 0)
+        return Results.Ok(new { message = "No unverified users." });
+
+    db.Users.RemoveRange(list);
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new { message = "Unverified users deleted." });
+});
+
 static bool IsUniqueEmailViolation(DbUpdateException ex)
 {
     if (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx)
