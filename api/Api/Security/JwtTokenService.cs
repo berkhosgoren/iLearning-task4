@@ -16,7 +16,7 @@ namespace Api.Security
             _config = config;
         }
 
-        public string Create(User user)
+        public string GenerateToken(User user)
         {
             var key = _config["Jwt:Key"] ?? "";
             var issuer = _config["Jwt:Issuer"];

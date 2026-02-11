@@ -1,18 +1,40 @@
 using Api.Data;
-using Microsoft.EntityFrameworkCore;
 using Api.DTOs;
 using Api.Models;
 using Api.Security;
 using Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    const string schemeId = "Bearer";
+
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Api", Version = "v1" });
+
+    c.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter: Bearer {your JWT token}"
+    });
+
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference(schemeId, document)] = []
+    });
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -47,7 +69,6 @@ app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -165,9 +186,12 @@ app.MapPost("/auth/login", async (LoginRequest req, AppDbContext db, JwtTokenSer
     user.LastLoginAtUtc = DateTime.UtcNow;
     await db.SaveChangesAsync();
 
+    var token = jwt.GenerateToken(user);
+
     return Results.Ok(new
     {
         message = "Login successful",
+        token,
         user = new { user.Id, user.Name, user.Email, status = user.Status.ToString() }
     });
 
