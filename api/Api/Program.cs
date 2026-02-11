@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -195,6 +196,22 @@ app.MapPost("/auth/login", async (LoginRequest req, AppDbContext db, JwtTokenSer
         user = new { user.Id, user.Name, user.Email, status = user.Status.ToString() }
     });
 
+});
+
+app.MapGet("/users", [Authorize] async (AppDbContext db) =>
+{
+    var users = await db.Users.OrderByDescending(u => u.CreatedAtUtc).Select(u => new
+    {
+        u.Id,
+        u.Name,
+        u.Email,
+        status = u.Status.ToString(),
+        u.CreatedAtUtc,
+        u.LastLoginAtUtc
+    })
+    .ToListAsync();
+
+    return Results.Ok(users);
 });
 
 static bool IsUniqueEmailViolation(DbUpdateException ex)
