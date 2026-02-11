@@ -68,6 +68,11 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.Use(async (ctx, next) =>
+{
+    await next();
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -198,7 +203,10 @@ app.MapPost("/auth/login", async (LoginRequest req, AppDbContext db, JwtTokenSer
 
 });
 
-app.MapGet("/users", [Authorize] async (AppDbContext db) =>
+var secured = app.MapGroup("/")
+    .RequireAuthorization().AddEndpointFilter<UserAccessFilter>();
+
+secured.MapGet("/users", async (AppDbContext db) =>
 {
     var users = await db.Users.OrderByDescending(u => u.CreatedAtUtc).Select(u => new
     {
