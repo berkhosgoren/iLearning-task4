@@ -31,11 +31,6 @@ export class Users implements OnInit{
     this.refresh();
   }
 
-  logout() {
-    this.auth.clearToken();
-    this.router.navigate(['/login']);
-  }
-
   refresh() {
     this.message = '';
     this.busy = true;

@@ -1,0 +1,11 @@
+<header class="topbar">
+    <div class="brand">iLearning</div>
+
+    @if (isLoggedIn) {
+        <button class="btn" (click)="logout()">Logout</button>
+    }
+</header>
+
+<main class="page">
+    <router-outlet></router-outlet>
+</main>

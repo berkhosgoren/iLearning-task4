@@ -11,7 +11,6 @@
     }
 
     <div class ="toolbar">
-        <button type="button" (click)="logout()" [disabled]="busy">Logout</button>
         <button type="button" (click)="refresh()" [disabled]="busy ">Refresh</button>
         <button type="button" (click)="blockSelected()" [disabled]="busy || selectedCount === 0">Block</button>
         <button type="button" (click)="unblockSelected()" [disabled]="busy || selectedCount === 0">Unblock</button>
