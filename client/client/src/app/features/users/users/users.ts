@@ -2,7 +2,8 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserRow, UsersService } from '../../../core/services/users.service';
 import { finalize } from 'rxjs/operators';
-
+import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 
 @Component({
@@ -18,6 +19,9 @@ export class Users implements OnInit{
   private usersApi = inject(UsersService);
   private cd = inject(ChangeDetectorRef);
 
+  private router = inject(Router);
+  private auth = inject(AuthService);
+
   list: UserRow[] = [];
   selected = new Set<string>();
   message = '';
@@ -25,6 +29,11 @@ export class Users implements OnInit{
 
   ngOnInit(): void {
     this.refresh();
+  }
+
+  logout() {
+    this.auth.clearToken();
+    this.router.navigate(['/login']);
   }
 
   refresh() {
