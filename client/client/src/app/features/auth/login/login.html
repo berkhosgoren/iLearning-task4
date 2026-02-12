@@ -1,13 +1,20 @@
-<h2>Login</h2>
+<div class="auth-page">
+    <div class="auth-card">
+        <h2>Login</h2>
+        <input type="email" placeholder="Email" [(ngModel)]="email"/>
+        <input type="password" placeholder="Password" [(ngModel)]="password"/>
 
-<input [(ngModel)]="email" placeholder="Email">
-<input [(ngModel)]="password" placeholder="Password" type="password">
+        <button (click)="login()">Login</button>
 
-<button (click)="login()">Login</button>
+        <p class="switch">
+            No Account ?
+            <a routerLink="/register">Register</a>
+        </p>
 
-<p>{{message}}</p>
+        @if (message) {
+            <div class="message">{{ message }}</div>
+        }
+    </div>
+</div>
 
-<p class="muted">
-    No Account ?
-    <a routerLink="/register">Register</a>
-</p>
+

@@ -1,0 +1,40 @@
+.auth-page {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-card {
+    width: 360px;
+    padding: 28px;
+    border: 1px solid #999;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-card h2 {
+    margin-bottom: 6px;
+}
+
+.auth-card input {
+    padding: 8px 10px;
+    border: 1px solid #999;
+}
+
+.auth-card button {
+    margin-top: 6px;
+}
+
+.switch {
+    font-size: 14px;
+}
+
+.message {
+    margin-top: 6px;
+    padding: 8px;
+    border: 1px solid #999;
+    background: #fafafa;
+}
