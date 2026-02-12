@@ -1,23 +1,23 @@
 <div class="page">
-    <div class="header">
-        <h2>Users</h2>
+  <div class="container">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="btn" type="button" (click)="refresh()" [disabled]="busy">Refresh</button>
+        <button class="btn" type="button" (click)="blockSelected()" [disabled]="busy || selectedCount === 0">Block</button>
+        <button class="btn" type="button" (click)="unblockSelected()" [disabled]="busy || selectedCount === 0">Unblock</button>
+        <button class="btn btn-danger" type="button" (click)="deleteSelected()" [disabled]="busy || selectedCount === 0">Delete</button>
+        <button class="btn btn-danger" type="button" (click)="deleteUnverified()" [disabled]="busy">Delete Unverified</button>
+      </div>
 
-        <div class="meta">
-             <span class="selected-count">Selected: {{ selectedCount }}</span>
-        </div>
+      <div class="helper" style="margin:0;">
+        Selected: {{ selectedCount }}
+      </div>
     </div>
+
     @if (message) {
-        <div class="message">{{ message }}</div>
+      <div class="alert">{{ message }}</div>
     }
 
-    <div class ="toolbar">
-        <button type="button" (click)="refresh()" [disabled]="busy ">Refresh</button>
-        <button type="button" (click)="blockSelected()" [disabled]="busy || selectedCount === 0">Block</button>
-        <button type="button" (click)="unblockSelected()" [disabled]="busy || selectedCount === 0">Unblock</button>
-        <button type="button" (click)="deleteSelected()" [disabled]="busy || selectedCount === 0">Delete</button>
-        <button type="button" (click)="deleteUnverified()" [disabled]="busy || selectedCount === 0">Delete Unverified</button>       
-    </div>
-    
     <div class="tableWrap">
     <table class="table">
         <thead>
@@ -55,9 +55,23 @@
                 </td>
                 <td>{{ u.name }}</td>
                 <td>{{ u.email }}</td>
-                <td>{{ u.status }}</td>
-                <td>{{ u.createdAtUtc }}</td>
-                <td>{{ u.lastLoginAtUtc || '-' }}</td>
+                <td>
+                    <span class="badge"
+                    [class.badge-active]="u.status === 'Active'"
+                    [class.badge-blocked]="u.status === 'Blocked'"
+                    [class.badge-unverified]="u.status === 'Unverified'">
+                    {{ u.status }}
+                    </span>
+                </td>
+
+                <td>{{ u.createdAtUtc | date: 'dd.MM.yyyy HH:mm' }}</td>
+                <td>
+                    @if (u.lastLoginAtUtc) {
+                        {{ u.lastLoginAtUtc | date: 'dd.MM.yyyy HH:mm' }}
+                    } @else {
+                        -
+                    }
+                </td>
             </tr>
          }     
          
@@ -69,4 +83,5 @@
         </tbody>
     </table>
     </div>
+  </div>
 </div>
