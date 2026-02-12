@@ -17,8 +17,8 @@ export type UserRow ={
 export class UsersService {
   private api = inject(ApiService);
 
-  list() : Observable<UserRow[]> {
-    return this.api.get('/users') as Observable<UserRow[]>;
+  list() {
+    return this.api.get<UserRow[]>('/users');
   }
 
   block(ids: string[]) {

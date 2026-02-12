@@ -1,6 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserRow, UsersService } from '../../../core/services/users.service';
+import { finalize } from 'rxjs/operators';
+
+
 
 @Component({
   selector: 'app-users',
@@ -13,6 +16,7 @@ import { UserRow, UsersService } from '../../../core/services/users.service';
 export class Users implements OnInit{
 
   private usersApi = inject(UsersService);
+  private cd = inject(ChangeDetectorRef);
 
   list: UserRow[] = [];
   selected = new Set<string>();
@@ -25,15 +29,21 @@ export class Users implements OnInit{
 
   refresh() {
     this.message = '';
-    this.usersApi.list().subscribe({
+    this.busy = true;
+
+    this.usersApi.list()
+    .pipe(finalize(() => (this.busy = false)))
+    .subscribe({
       next: (res) => {
         this.list = res ?? [];
         this.selected.clear();
-      },
+        queueMicrotask(() => this.cd.detectChanges());
+              },
       error: (err) => {
         console.error(err);
-        this.message = err?.error?.message ?? 'Failed to load users.';
-      }
+          this.message = err?.error?.message ?? 'Failed to load users.';   
+          queueMicrotask(() => this.cd.detectChanges());
+      },
     });
  }
 
@@ -46,7 +56,7 @@ export class Users implements OnInit{
   else this.selected.delete(id);
  }
 
- togleAll(checked: boolean) {
+ toggleAll(checked: boolean) {
   this.selected.clear();
   if (checked) {
     for (const u of this.list) this.selected.add(u.id);
@@ -65,15 +75,17 @@ export class Users implements OnInit{
   if (this.selectedCount === 0) return;
 
   this.busy = true;
-  this.usersApi.block(this.selectedIds).subscribe({
+  this.usersApi.block(this.selectedIds)
+  .pipe(finalize(() => (this.busy = false)))
+  .subscribe({
     next: (res: any) => {
       this.message = res?.message ?? 'Users blocked.';
-      this.busy = false;
       this.refresh();
+      queueMicrotask(() => this.cd.detectChanges());
     },
     error: (err) => {
-      this.busy = false;
       this.message = err?.error?.message ?? 'Failed to block users.';
+      queueMicrotask(() => this.cd.detectChanges());
     }
   });
  }
@@ -82,15 +94,17 @@ export class Users implements OnInit{
   if (this.selectedCount === 0) return;
   
   this.busy = true;
-  this.usersApi.unblock(this.selectedIds).subscribe({
+  this.usersApi.unblock(this.selectedIds)
+  .pipe(finalize(() => (this.busy = false)))
+  .subscribe({
     next: (res: any) => {
       this.message = res?.message ?? 'Users unblocked.';
-      this.busy = false;
       this.refresh();
+      queueMicrotask(() => this.cd.detectChanges());
     },
     error: (err) => {
-      this.busy = false;
       this.message = err?.error?.message ?? 'Failed to unblock users.';
+      queueMicrotask(() => this.cd.detectChanges());
     }
   });
 }
@@ -100,15 +114,17 @@ deleteSelected() {
   if (!confirm(`Delete ${this.selectedCount} user(s)?`)) return;
 
   this.busy = true;
-  this.usersApi.delete(this.selectedIds).subscribe({
+  this.usersApi.delete(this.selectedIds)
+  .pipe( finalize(() => (this.busy = false)))
+  .subscribe({
     next: (res: any) => {
       this.message = res?.message ?? "Users deleted.";
-      this.busy = false;
       this.refresh();
+      queueMicrotask(() => this.cd.detectChanges());
     },
     error: (err) => {
-      this.busy = false;
       this.message = err?.error?.message ?? 'Failed to delete users.';
+      queueMicrotask(() => this.cd.detectChanges());
     }
   });
 }
@@ -117,17 +133,18 @@ deleteUnverified() {
   if (!confirm('Delete ALL unverified users?')) return;
 
   this.busy = true;
-  this.usersApi.deleteUnverified().subscribe({
+  this.usersApi.deleteUnverified()
+  .pipe(finalize(() => (this.busy = false)))
+  .subscribe({
     next: (res: any) => {
       this.message = res?.message ?? 'Unverified users deleted.';
-      this.busy = false;
       this.refresh();
+      queueMicrotask(() => this.cd.detectChanges());
     },
     error: (err) => {
-      this.busy = false;
       this.message = err?.error?.message ?? 'Failed to delete unverified users.';
+      queueMicrotask(() => this.cd.detectChanges());
     }
   });
 }
-
 }

@@ -1,0 +1,85 @@
+.page {
+    padding: 48px;
+}
+
+.header {
+    width: min(1100px, 100%);
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.selected {
+    font-size: 14px;
+}
+
+.message {
+    width: min(1100px, 100%);
+    margin: 10px auto 14px;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    border-radius: 6px;
+    max-width: 900px;
+}
+
+.toolbar {
+    width: min(1100px, 100%);
+    margin: 0 auto 12px;
+    display: flex;
+    gap: 8px;
+}
+
+.tableWrap {
+    display: flex;
+    justify-content: center;
+}
+
+.table {
+    width: min(1100px, 100%);
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.table th,
+.table td {
+    border: 1px solid #999;
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.table thead th {
+    font-weight: 700;
+}
+
+.checkCol {
+    width: 44px;
+    text-align: center !important;
+}
+
+.checkCol input[type="checkbox"] {
+    display: inline-block;
+    margin: 0;
+    vertical-align: middle;
+}
+
+.empty {
+    text-align: center;
+    padding: 16px !important;
+    color: #666;
+}
+
+button[disabled]{
+    opacity: 0.5;
+    cursor: not-allowed;
+}
