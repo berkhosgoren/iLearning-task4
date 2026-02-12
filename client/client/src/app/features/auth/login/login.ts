@@ -27,9 +27,19 @@ export class Login {
       password:this.password
     }).subscribe({
       next:(res:any)=>{
+
         this.auth.setToken(res.token);
-        this.message = 'Login success';
-        this.router.navigate(['/users']);
+
+        this.auth.me().subscribe({
+          next: () => {
+            this.message = 'Login success';
+            this.router.navigate(['/users']);
+          },
+          error: () => {
+            this.auth.clearToken();
+            this.message = 'Session validation failed.';
+          }
+        });
       },
       error:(err)=>{
         this.message = err.error?.message ?? 'Error';
