@@ -1,27 +1,35 @@
 <div class="auth-page">
-    <div class="card">
-        <h2>Register</h2>
-
-        @if (message) {
-            <div class="alert">{{ message }}</div>
-        }
-
-        <div class="field">
-            <input class="input" [(ngModel)]="name" placeholder="Name" autocomplete="name">
+    <div class="auth-shell">
+            <div class="card">
+                <h2>Register</h2>
+                @if (message) {<div class="alert">{{ message }}</div>
+            }
+            <div class="field">
+                <input class="input" [(ngModel)]="name" placeholder="Name" autocomplete="name">
+            </div>
+            
+            <div class="field">
+                <input class="input" [(ngModel)]="email" placeholder="Email" autocomplete="email">
+            </div>
+            
+            <div class="field">
+                <input class="input" [(ngModel)]="password" placeholder="Password" type="password" autocomplete="new-password">
+            </div>
+            
+            <button class="btn btn-primary btn-wide" type="button" (click)="register()">Register</button>
+            
+            <div class="helper">
+                Already have an Account? <a routerLink="/login">Login</a>
+            </div>
+        
         </div>
 
-        <div class="field">
-            <input class="input" [(ngModel)]="email" placeholder="Email" autocomplete="email">
-        </div>
-
-        <div class="field">
-            <input class="input" [(ngModel)]="password" placeholder="Password" type="password" autocomplete="new-password">
-        </div>
-
-        <button class="btn btn-primary" type="button" (click)="register()">Register</button>
-
-        <div class="helper">
-            Already have an Account? <a routerLink="/login">Login</a>
+    <div class="auth-visual" aria-hidden="true">
+        <div class="auth-visual-inner">
+            <div class="auth-visual-title">Welcome</div>
+            <div class="auth-visual-sub">Create Your Admin Account</div>
         </div>
     </div>
+  </div>
 </div>
+

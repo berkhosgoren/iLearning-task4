@@ -1,23 +1,31 @@
 <div class="auth-page">
-    <div class="card">
-        <h2>Login</h2>
-        
-        @if (message) {
-            <div class="alert">{{ message }}</div>
-        }
-
-        <div class="field">
-            <input class="input" [(ngModel)]="email" placeholder="Email" autocomplete="email">
-        </div>
-
-        <div class="field">
-            <input class="input" [(ngModel)]="password" placeholder="Password" type="password" autocomplete="current-password">
-        </div>
-
-        <button class="btn btn-primary" type="button" (click)="login()">Login</button>
-
-        <div class="helper">
-            No Account? <a routerLink="/register">Register</a>
+    <div class="auth-shell">
+            <div class="card">
+                <h2>Login</h2>
+                @if (message) {
+                    <div class="alert">{{ message }}</div>
+                }
+                
+                <div class="field">
+                    <input class="input" [(ngModel)]="email" placeholder="Email" autocomplete="email">
+                </div>
+                
+                <div class="field">
+                    <input class="input" [(ngModel)]="password" placeholder="Password" type="password" autocomplete="current-password">
+                </div>
+                
+                <button class="btn btn-primary btn-wide" type="button" (click)="login()">Login</button>
+                
+                <div class="helper">
+                    No Account? <a routerLink="/register">Register</a>
+                </div>
+            </div>
+            
+            <div class="auth-visual" aria-hidden="true">
+            <div class="auth-visual-inner">
+                <div class="auth-visual-title">iLearning</div>
+                <div class="auth-visual-sub">Admin Panel Access</div>
+            </div>
         </div>
     </div>
 </div>
